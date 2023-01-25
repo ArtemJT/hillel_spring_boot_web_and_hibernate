@@ -1,55 +1,39 @@
 package com.example.hw_28_spring_boot_web.controller;
 
-import com.example.hw_28_spring_boot_web.entity.Order;
-import com.example.hw_28_spring_boot_web.entity.Product;
-import com.example.hw_28_spring_boot_web.services.OrderService;
+import com.example.hw_28_spring_boot_web.dto.ProductDto;
+import com.example.hw_28_spring_boot_web.services.ProductService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
 import java.util.List;
+
+import static com.example.hw_28_spring_boot_web.utilities.Logger.logInvokedMethod;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("orders")
-@Slf4j
-public class OrderController {
+@RequestMapping("products")
+public class ProductController {
 
-    private final OrderService orderService;
+    private final ProductService productService;
 
     @GetMapping
-    public List<Order> getAllOrders() {
+    public List<ProductDto> getAllProducts() {
         logInvokedMethod();
-        return orderService.findAllOrders();
-    }
-
-    @GetMapping("/products")
-    public List<Product> getAllProducts() {
-        logInvokedMethod();
-        return orderService.findAllProducts();
-    }
-
-    @PostMapping("/products/{quantity}")
-    public void saveProducts(@PathVariable int quantity){
-        logInvokedMethod();
-        List<Product> products = new ArrayList<>();
-        for (int i = 1; i <= quantity; i++) {
-            Product product = new Product();
-            product.setName("Product-" + i);
-            product.setCost(Double.parseDouble(Integer.toString(i) + i + '.' + i + i));
-            products.add(product);
+        try {
+            return productService.findAllProducts();
+        } catch (EntityNotFoundException e) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
         }
-        orderService.addProduct(products);
     }
 
-    @PostMapping
-    public void saveOrder(@RequestParam int... id) {
+    @PostMapping("/{quantity}")
+    public ResponseEntity<String> saveProducts(@PathVariable int quantity) {
         logInvokedMethod();
-        orderService.addOrder(id);
-    }
-
-    private void logInvokedMethod() {
-        log.info("{{}} WAS CALLED", Thread.currentThread().getStackTrace()[1].getMethodName());
+        String response = productService.addProduct(quantity);
+        return ResponseEntity.ok(response);
     }
 }

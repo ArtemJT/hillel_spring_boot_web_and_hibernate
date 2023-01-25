@@ -1,53 +1,55 @@
 package com.example.hw_28_spring_boot_web.services;
 
-import com.example.hw_28_spring_boot_web.entity.Order;
+import com.example.hw_28_spring_boot_web.dto.ProductDto;
 import com.example.hw_28_spring_boot_web.entity.Product;
-import com.example.hw_28_spring_boot_web.repositories.OrderRepo;
 import com.example.hw_28_spring_boot_web.repositories.ProductRepo;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Streams;
-import lombok.NonNull;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import static com.example.hw_28_spring_boot_web.utilities.Logger.logResponse;
+import static com.example.hw_28_spring_boot_web.utilities.Mapper.allToDto;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class OrderService {
+public class ProductService {
 
-    private final OrderRepo orderRepo;
     private final ProductRepo productRepo;
-    private final ObjectMapper objectMapper;
 
-    public void addProduct(@NonNull List<Product> products) {
+    public String addProduct(int quantity) {
+        List<Product> products = new ArrayList<>();
+        for (int i = 1; i <= quantity; i++) {
+            Product product = new Product();
+            product.setName("Product-" + i);
+            product.setCost(Double.parseDouble(Integer.toString(i) + i + '.' + i + i));
+            products.add(product);
+        }
+
         productRepo.saveAll(products);
-        products.forEach(prod -> log.info("PRODUCT: {{}} ADDED SUCCESSFULLY", prod));
+        return logResponse("{" + quantity + "} PRODUCT(S) ADDED SUCCESSFULLY");
     }
 
-    public List<Product> findAllProducts() {
-        return Streams.stream(productRepo.findAll()).toList();
-    }
-
-    public Order addOrder(@NonNull int... productId) {
+    public List<ProductDto> findAllProductsById(int... productId) throws EntityNotFoundException {
         List<Integer> idList = Arrays.stream(productId).boxed().toList();
         List<Product> products = Streams.stream(productRepo.findAllById(idList)).toList();
-        double cost = products.stream().mapToDouble(Product::getCost).sum();
-        Order order = new Order();
-        order.setDate(LocalDate.now());
-        order.setProducts(products);
-        order.setCost(cost);
-        log.info("ORDER {{}} ADDED SUCCESSFULLY", order);
-        return orderRepo.save(order);
+        if (products.isEmpty()) {
+            throw new EntityNotFoundException();
+        }
+        return allToDto(products, ProductDto.class);
     }
 
-    public 
-
-    public List<Order> findAllOrders() {
-        return Streams.stream(orderRepo.findAll()).toList();
+    public List<ProductDto> findAllProducts() throws EntityNotFoundException {
+        List<Product> products = Streams.stream(productRepo.findAll()).toList();
+        if (products.isEmpty()) {
+            throw new EntityNotFoundException();
+        }
+        return allToDto(products, ProductDto.class);
     }
 }

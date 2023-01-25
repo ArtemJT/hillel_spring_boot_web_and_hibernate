@@ -1,13 +1,12 @@
 version: '3.3'
 
 services:
-  postgres_storeDB:
-#    container_name: "storeDB"
+  postgres_testDB:
     image: postgres:14.6
     restart: always
     environment:
-      POSTGRES_DB: storeDB
-      POSTGRES_PASSWORD: storeDB
-      POSTGRES_USER: storeDB
+      POSTGRES_DB: testDB
+      POSTGRES_PASSWORD: testDB
+      POSTGRES_USER: testDB
     ports:
       - "5432:5432"
